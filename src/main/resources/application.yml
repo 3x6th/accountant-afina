@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: accountant
+
+  main:
+    web-application-type: servlet  # Явно указываем тип приложения
+    banner-mode: console
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+        maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+  devtools:
+    restart:
+      enabled: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
