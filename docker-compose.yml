@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Сервис PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: accountant-postgres
+    restart: unless-stopped
+    env_file:
+      - .env  # Подключаем переменные
+    environment: #Таймзона по умолчанию UTC
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "${DB_EXTERNAL_PORT:-5433}:5432"  # Внешний порт:внутренний
+    volumes:
+      # Для хранения данных между перезапусками
+      - postgres_data:/var/lib/postgresql/data
+      # SQL для инициализации БД при первом запуске
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Конфиг PostgreSQL
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: >
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - accountant-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Сервис нашего приложения
+  app:
+    build: .  # Собираем из Dockerfile в текущей папке
+    container_name: accountant-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy  # Ждем пока БД станет здоровой
+    env_file:
+      - .env  # Те же переменные
+    environment:
+      TZ: Europe/Moscow # Для удобства чтения логов
+      # Logback
+      LOG_PATH: /app/logs
+      LOG_FILE: application
+      # Spring Boot будет брать эти переменные
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JACKSON_TIME_ZONE: UTC  #Spring Boot настраиваем на UTC
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      # Маппим /app/logs внутри контейнера в ./logs/prod/app на хосте
+      - ./logs/prod/app:/app/logs
+    networks:
+      - accountant-network
+    # Health check для приложения
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Volume для хранения данных БД
+volumes:
+  postgres_data:
+    name: accountant_postgres_data
+
+# Сеть для общения контейнеров
+networks:
+  accountant-network:
+    driver: bridge
