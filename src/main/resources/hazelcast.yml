@@ -1,0 +1,70 @@
+hazelcast:
+  cluster-name: accountant-cluster
+
+  # Для Docker сети
+  network:
+    # Порты для кластера
+    port:
+      port: 5701
+      port-count: 10
+      auto-increment: true
+
+    # Настройки выхода (для Docker)
+    outbound-ports:
+      - 5701-5710
+
+    # Интерфейсы - ТОЛЬКО подсеть Docker Compose
+    interfaces:
+      enabled: true
+      interfaces:
+        - 172.20.*.*  # Ваша подсеть из docker-compose.yml
+
+    # TCP/IP discovery (работает в Docker)
+    join:
+      multicast:
+        enabled: false
+      tcp-ip:
+        enabled: true
+        member-list:
+          - accountant-app-1
+          - accountant-app-2
+        connection-timeout-seconds: 60
+
+    # REST API для мониторинга
+    rest-api:
+      enabled: true
+      endpoint-groups:
+        CLUSTER_READ:
+          enabled: true
+        HEALTH_CHECK:
+          enabled: true
+
+  # Оптимальная конфигурация для rate limiter
+  map:
+    rate-limiter-store:
+      # Время жизни записи (совпадает с RateLimiterService)
+      time-to-live-seconds: 120
+      # Удалить если не используется
+      max-idle-seconds: 60
+      # Синхронная репликация для консистентности
+      backup-count: 1
+      # Read-your-writes consistency
+      read-backup-data: true
+      # Стратегия эвикции
+      eviction:
+        eviction-policy: LRU
+        size: 10000
+        max-size-policy: PER_NODE
+      # Оптимизация для частых операций put
+      in-memory-format: BINARY
+      statistics-enabled: false  # Улучшает производительность
+
+  # Производительность
+  properties:
+    hazelcast.logging.type: slf4j
+    hazelcast.io.thread.count: 4
+    hazelcast.operation.thread.count: 4
+    hazelcast.event.thread.count: 4
+    # Для Docker
+    hazelcast.socket.bind.any: false
+    hazelcast.socket.server.bind.any: false

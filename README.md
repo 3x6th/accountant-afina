@@ -1,17 +1,14 @@
-Локальный запуск:
-1. Поднять у себя postgresql
-2. Создать бд и пользователя с правами на работу с ней
-3. Сделать в resources/application-local.yml
-4. В application-local.yaml прописать настройки подключения к бд: spring.datasource.url, username, password
-5. Запустить приложение с конфигурацией application-local
+Настроен распределенный на 2 инстанса hazelcast rate limiter 100 запросов за 60 сек, также настроен балансировщик nginx.
 
 Запуск в Docker контейнере:
-1. Установить Docker Desktop 4.8.2 или Docker Compose 1.27.0+ и Docker Engine 19.03.0+
+1. Установить Docker Desktop 4.8.2+ или Docker Compose 1.27.0+ и Docker Engine 19.03.0+
 2. В корневой папке проекта выполнить команды: docker-compose up -d --build
-3. Проверить командой docker-compose ps, что accountant-app и accountant-postgres в состоянии Up (healthy)
+3. Проверить командой docker-compose ps, что accountant-app-1, accountant-app-2, accountant-postgres  и accountant-nginx в состоянии Up (healthy)
 
 Эндпоинты:
 
-http://localhost:8080/swagger-ui/index.html
+http://localhost/actuator/health
 
-http://localhost:8080/actuator/health
+http://localhost/swagger-ui/index.html#/
+
+http://localhost/api/demo/check-request
