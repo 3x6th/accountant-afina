@@ -1,6 +1,6 @@
 spring:
   application:
-    name: accountant
+    name: accountant-api-cms
 
   main:
     web-application-type: servlet  # Явно указываем тип приложения
@@ -28,6 +28,14 @@ server:
   port: 8080
   servlet:
     context-path: /
+
+# Настройки rate limiter
+rate-limiter:
+  max-requests: 100
+  time-window-seconds: 60
+  map-name: rate-limiter-store
+  time-to-live-seconds: 120
+  max-idle-seconds: 60
 
 # Swagger
 springdoc:

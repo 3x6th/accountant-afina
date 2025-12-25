@@ -4,7 +4,7 @@ FROM eclipse-temurin:21-jdk-alpine
 # Метаданные образа
 LABEL maintainer="arsp93@mail.ru"
 LABEL version="1.0"
-LABEL description="Accountant afina70 application"
+LABEL description="Accountant api-cms for afina70.ru application"
 
 # Создаем папку для приложения
 WORKDIR /app
@@ -16,14 +16,14 @@ RUN apk add --no-cache curl bash
 RUN mkdir -p /app/logs
 
 # Копируем наш JAR файл в контейнер
-COPY target/accountant-0.0.1-SNAPSHOT.jar app.jar
+COPY target/accountant-api-cms.jar app.jar
 
 # Создаем пользователя для безопасности
 RUN adduser -D -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Открываем порт (если приложение слушает на 8080)
-EXPOSE 8080
+EXPOSE 8080 5701
 
 # Запускаем приложение
 CMD ["java", "-jar", "app.jar"]
